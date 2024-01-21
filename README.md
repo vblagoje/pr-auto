@@ -64,7 +64,7 @@ jobs:
     steps:
       - name: Run Auto PR Writer on initial open PR        
         id: auto_pr_writer_for_pr
-        uses: vblagoje/auto-pr-writer@v2
+        uses: vblagoje/auto-pr-writer@v1
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           openai_base_url: https://api.fireworks.ai/inference/v1
@@ -90,7 +90,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Auto PR Writer on PR comment
-        uses: vblagoje/auto-pr-writer@v2
+        uses: vblagoje/auto-pr-writer@v1
         id: auto_pr_writer_for_comment
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
