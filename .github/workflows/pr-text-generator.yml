@@ -1,0 +1,61 @@
+name: Pull Request Text Generator Workflow
+
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  generate-pr-text-on-opened-pr:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Auto PR Writer on initial open PR
+        id: auto_pr_writer_for_pr
+        uses: ./
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          openai_base_url: https://api.fireworks.ai/inference/v1
+          generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
+          user_prompt: ${{ github.event.pull_request.body }}
+
+      - name: Update PR description
+        uses: vblagoje/update-pr@v1
+        with:
+          pr-body: ${{ steps.auto_pr_writer_for_pr.outputs.generated_pr_text }}
+
+  generate-pr-text-on-pr-comment:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@auto-pr-writer-bot')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Fetch PR details for comment event
+        id: pr_details
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Auto PR Writer on PR comment
+        uses: ./
+        id: auto_pr_writer_for_comment
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          openai_base_url: https://api.fireworks.ai/inference/v1
+          user_prompt: ${{ github.event.comment.body }}
+          target_branch: ${{ fromJson(steps.pr_details.outputs.data).base.ref }}
+          source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
+          generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
+
+      - name: Update Pull Request Description
+        uses: vblagoje/update-pr@v1
+        with:
+          pr-body: ${{ steps.auto_pr_writer_for_comment.outputs.generated_pr_text }}
+          pr-number: ${{ github.event.issue.number }}

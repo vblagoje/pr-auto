@@ -1,0 +1,6 @@
+# add haystack-ai if you want to develop auto_pr_writer.py
+# haystack-ai
+
+# below are runtime dependencies we'll add to base haystack image
+openapi3
+jsonref
