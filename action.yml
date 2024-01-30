@@ -59,6 +59,7 @@ runs:
     SYSTEM_PROMPT: ${{ inputs.system_prompt }}
     USER_PROMPT: ${{ inputs.user_prompt }}
     FUNCTION_CALLING_PROMPT: Compare branches ${{ inputs.base_branch }} (BASE) and ${{ inputs.head_branch }} (HEAD), in GitHub repository ${{ inputs.github_repository }} (owner/repo)
+    FUNCTION_CALLING_VALIDATION_SCHEMA: https://bit.ly/compare_branches_function_params_schema
     BOT_NAME: ${{ inputs.bot_name }}
     OPENAPI_SERVICE_SPEC: https://bit.ly/github_compare
     OPENAPI_SERVICE_TOKEN: ${{ inputs.github_token }}
