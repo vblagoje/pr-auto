@@ -31,7 +31,7 @@ jobs:
       - name: Run Auto PR on initial open PR
         if: github.event_name == 'pull_request'
         id: auto_pr_for_pr
-        uses: vblagoje/auto-pr@v2
+        uses: vblagoje/auto-pr@v1
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           openai_base_url: https://api.fireworks.ai/inference/v1
