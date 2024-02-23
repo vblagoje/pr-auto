@@ -10,8 +10,12 @@ Auto PR is a GitHub Action designed to automatically generate pull request descr
 ![Auto PR  Demo](https://raw.githubusercontent.com/vblagoje/various/main/auto-pr-writer-optimize.gif)
 
 ## Usage
-
-Ensure you have set the `OPENAI_API_KEY` in your repository's secrets. Add a default template for pull requests, clarifying that the pull request description will be automatically generated. Feel free to use our [example](https://github.com/vblagoje/auto-pr/blob/main/.github/pull_request_template.md). Lastly, incorporate a workflow trigger for this GitHub Action. Refer to the Minimal and Advanced example workflows provided below.
+The minimum requirements to use this action with its default settings are:
+- You have an `OPENAI_API_KEY` set in your repository secrets.
+- You have given "Read and write permissions" to workflows in your repository:
+  - Settings -> Actions -> General -> Workflow Permissions: Select 'Read and write permissions' and Save
+- Add a workflow to your repository to trigger this action when a new PR is created, edited or reopened. See the example below.
+- (Optional) Use the [example pull request template in your repository to create an initial PR description](https://github.com/vblagoje/auto-pr/blob/main/.github/pull_request_template.md)
 
 ## Minimal Example Workflow
 
@@ -22,26 +26,24 @@ name: Pull Request Text Generator Workflow
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, edited, reopened]  
 
 jobs:
     generate-pr-text-on-opened-pr:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run Auto PR on initial open PR
-        if: github.event_name == 'pull_request'
-        id: auto_pr_for_pr
-        uses: vblagoje/auto-pr@v1
-        with:
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          openai_base_url: https://api.fireworks.ai/inference/v1
-          generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
-          user_prompt: ${{ github.event.pull_request.body }}
+      runs-on: ubuntu-latest
+      steps:
+        - name: Run Auto PR on initial open PR
+          if: github.event_name == 'pull_request'
+          id: auto_pr_for_pr
+          uses: vblagoje/auto-pr@main
+          with:
+            openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+            user_prompt: ${{ github.event.pull_request.body }}
 
-      - name: Update PR description
-        uses: vblagoje/update-pr@v1
-        with:
-          pr-body: ${{ steps.auto_pr_for_pr.outputs.generated_pr_text }}
+        - name: Update PR description
+          uses: vblagoje/update-pr@main
+          with:
+            pr-body: ${{ steps.auto_pr_for_pr.outputs.pr-text }} 
 ```
 
 ## Advanced Example Workflow
@@ -64,7 +66,7 @@ jobs:
     steps:
       - name: Run Auto PR on initial open PR        
         id: auto_pr_for_pr
-        uses: vblagoje/auto-pr@v1
+        uses: vblagoje/auto-pr@main
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           openai_base_url: https://api.fireworks.ai/inference/v1
@@ -72,9 +74,9 @@ jobs:
           user_prompt: ${{ github.event.pull_request.body }}
 
       - name: Update PR description
-        uses: vblagoje/update-pr@v1
+        uses: vblagoje/update-pr@main
         with:
-          pr-body: ${{ steps.auto_pr_for_pr.outputs.generated_pr_text }}
+          pr-body: ${{ steps.auto_pr_for_pr.outputs.pr-text }}
 
 
   generate-pr-text-on-pr-comment:
@@ -90,7 +92,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Auto PR on PR comment
-        uses: vblagoje/auto-pr@v1
+        uses: vblagoje/auto-pr@main
         id: auto_pr_for_comment
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
@@ -101,9 +103,9 @@ jobs:
           generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
 
       - name: Update Pull Request Description
-        uses: vblagoje/update-pr@v1
+        uses: vblagoje/update-pr@main
         with:
-          pr-body: ${{ steps.auto_pr_for_comment.outputs.generated_pr_text }}
+          pr-body: ${{ steps.auto_pr_for_comment.outputs.pr_text }}
           pr-number: ${{ github.event.issue.number }}
 ```
 This workflow triggers the action on pull request open, edit, and reopen events. Additionally, it activates the action on issue comment events in pull requests when the comment contains `@auto-pr-bot`. 
