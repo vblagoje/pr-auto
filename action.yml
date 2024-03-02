@@ -1,4 +1,4 @@
-name: auto-pr
+name: pr-auto
 description: Automatically generate PR descriptions using LLMs
 author: Vladimir Blagojevic
 branding:
@@ -32,14 +32,14 @@ inputs:
     default: gpt-3.5-turbo-0613
   system_prompt:
     description: System message/prompt to help the model generate PR description (prompt text or URL where prompt text can be found)
-    default: https://bit.ly/auto_pr_writer_system_prompt
+    default: https://bit.ly/pr_auto_system
     required: false
   user_prompt:
     description: Additional prompt to help the model generate PR description
     required: false
   bot_name:
     description: The name of the bot so users can guide PR description generation with @bot_name from PR comments
-    default: auto-pr-bot
+    default: pr-auto-bot
 
 outputs:
   pr-text:

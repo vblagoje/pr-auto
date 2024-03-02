@@ -1,11 +1,10 @@
-# Auto PR
+# PR Auto
 
-![License](https://img.shields.io/github/license/vblagoje/auto-pr)
-![Last Commit](https://img.shields.io/github/last-commit/vblagoje/auto-pr)
+![License](https://img.shields.io/github/license/vblagoje/pr-auto)
 ![Docker Pulls](https://img.shields.io/docker/pulls/vblagoje/openapi-rag-service)
 
 ## Description
-Auto PR is a GitHub Action designed to automatically generate pull request descriptions using Large Language Models (LLMs). By default, it utilizes OpenAI's models, but it also supports integration with a variety of other LLM providers such as fireworks.ai, together.xyz, anyscale, octoai, etc., allowing users to select their preferred provider and LLMs to best suit their needs. This action can be customized with system and user-provided prompts to tailor the PR description generation.
+PR Auto is a GitHub Action designed to automatically generate pull request descriptions using Large Language Models (LLMs). By default, it utilizes OpenAI's models, but it also supports integration with a variety of other LLM providers such as fireworks.ai, together.xyz, anyscale, octoai, etc., allowing users to select their preferred provider and LLMs to best suit their needs. This action can be customized with system and user-provided prompts to tailor the PR description generation.
 
 ![Auto PR  Demo](https://raw.githubusercontent.com/vblagoje/various/main/auto-pr-writer-optimize.gif)
 
@@ -15,40 +14,40 @@ The minimum requirements to use this action with its default settings are:
 - You have given "Read and write permissions" to workflows in your repository:
   - Settings -> Actions -> General -> Workflow Permissions: Select 'Read and write permissions' and Save
 - Add a workflow to your repository to trigger this action when a new PR is created, edited or reopened. See the example below.
-- (Optional) Use the [example pull request template in your repository to create an initial PR description](https://github.com/vblagoje/auto-pr/blob/main/.github/pull_request_template.md)
+- (Optional) Use the [example pull request template in your repository to create an initial PR description](https://github.com/vblagoje/pr-auto/blob/main/.github/pull_request_template.md)
 
 ## Minimal Example Workflow
 
-Here's a minimal example of how to use the Auto PR in a pull request workflow:
+Here's a minimal example of how to use the PR Auto in a pull request workflow:
 
 ```yaml
 name: Pull Request Text Generator Workflow
 
 on:
   pull_request:
-    types: [opened, edited, reopened]  
+    types: [opened]
 
 jobs:
     generate-pr-text-on-opened-pr:
       runs-on: ubuntu-latest
       steps:
-        - name: Run Auto PR on initial open PR
+        - name: Run PR Auto on initial open PR
           if: github.event_name == 'pull_request'
-          id: auto_pr_for_pr
-          uses: vblagoje/auto-pr@main
+          id: pr_auto_id
+          uses: vblagoje/pr-auto@v1
           with:
             openai_api_key: ${{ secrets.OPENAI_API_KEY }}
             user_prompt: ${{ github.event.pull_request.body }}
 
         - name: Update PR description
-          uses: vblagoje/update-pr@main
+          uses: vblagoje/update-pr@v1
           with:
-            pr-body: ${{ steps.auto_pr_for_pr.outputs.pr-text }} 
+            pr-body: ${{ steps.pr_auto_id.outputs.pr-text }}
 ```
 
 ## Advanced Example Workflow
 
-Here's an advanced example of how to use the Auto PR in a pull request workflow:
+Here's an advanced example of how to use the PR Auto in a pull request workflow:
 
 ```yaml
 name: Pull Request Text Generator Workflow
@@ -64,9 +63,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - name: Run Auto PR on initial open PR        
-        id: auto_pr_for_pr
-        uses: vblagoje/auto-pr@main
+      - name: Run PR Auto on initial open PR
+        id: pr_auto_id
+        uses: vblagoje/pr-auto@v1
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           openai_base_url: https://api.fireworks.ai/inference/v1
@@ -74,14 +73,14 @@ jobs:
           user_prompt: ${{ github.event.pull_request.body }}
 
       - name: Update PR description
-        uses: vblagoje/update-pr@main
+        uses: vblagoje/update-pr@v1
         with:
-          pr-body: ${{ steps.auto_pr_for_pr.outputs.pr-text }}
+          pr-body: ${{ steps.pr_auto_id.outputs.pr-text }}
 
 
   generate-pr-text-on-pr-comment:
     runs-on: ubuntu-latest
-    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@auto-pr-bot')
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@pr-auto-bot')
     steps:   
       - name: Fetch PR details for comment event
         id: pr_details
@@ -91,9 +90,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Auto PR on PR comment
-        uses: vblagoje/auto-pr@main
-        id: auto_pr_for_comment
+      - name: Run PR Auto on PR comment
+        uses: vblagoje/pr-auto@v1
+        id: pr_auto_for_comment
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           openai_base_url: https://api.fireworks.ai/inference/v1
@@ -103,13 +102,13 @@ jobs:
           generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
 
       - name: Update Pull Request Description
-        uses: vblagoje/update-pr@main
+        uses: vblagoje/update-pr@v1
         with:
-          pr-body: ${{ steps.auto_pr_for_comment.outputs.pr_text }}
+          pr-body: ${{ steps.pr_auto_for_comment.outputs.pr_text }}
           pr-number: ${{ github.event.issue.number }}
 ```
-This workflow triggers the action on pull request open, edit, and reopen events. Additionally, it activates the action on issue comment events in pull requests when the comment contains `@auto-pr-bot`. 
-If you change the `bot_name` input in your workflow, make sure to update the `contains(github.event.comment.body, '@auto-pr-bot')` condition accordingly in your workflow.
+This workflow triggers the action on pull request open, edit, and reopen events. Additionally, it activates the action on issue comment events in pull requests when the comment contains `@pr-auto-bot`. 
+If you change the `bot_name` input in your workflow, make sure to update the `contains(github.event.comment.body, '@pr-auto-bot')` condition accordingly in your workflow.
 
 It's important to note that it utilizes fireworks.ai as an LLM provider, specifically the highly capable open-source LLM accounts/fireworks/models/mixtral-8x7b-instruct. This specific LLM has generated PR text descriptions comparable to those of gpt-4.
 
@@ -136,12 +135,12 @@ It's important to note that it utilizes fireworks.ai as an LLM provider, specifi
 
 - `user_prompt` **Optional** Additional user prompt to help the model generate the PR description.
 
-- `bot_name` **Optional** The name of the bot so users can guide LLM generation with @bot_name from PR comments. Defaults to auto-pr-bot
+- `bot_name` **Optional** The name of the bot so users can guide LLM generation with @bot_name from PR comments. Defaults to pr-auto-bot
 
 
 ## Contributing
 
-If you have ideas for enhancing Auto PR, or if you encounter a bug, we encourage you to contribute by opening an issue or a pull request. 
+If you have ideas for enhancing PR Auto, or if you encounter a bug, we encourage you to contribute by opening an issue or a pull request.
 The core of this GitHub Action is built on top of Docker image of the [vblagoje/openapi-rag-service](https://github.com/vblagoje/openapi-rag-service/) project. 
 Therefore, for contributions beyond minor edits to the `action.yml` or `README.md`, please direct your pull requests to 
 the [vblagoje/openapi-rag-service](https://github.com/vblagoje/openapi-rag-service/) GitHub repository.
@@ -156,7 +155,7 @@ To confirm the correct operation of the Docker image, perform a smoke test local
    Run the following command in your terminal, replacing `<YOUR_OPENAI_API_KEY>` with your actual API key and `<YOUR_GITHUB_TOKEN>` with your actual GitHub token:
 
    ```bash
-   docker run -e OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> -e OPENAPI_SERVICE_TOKEN=<YOUR_GITHUB_TOKEN> -e SYSTEM_PROMPT=https://bit.ly/auto_pr_writer_system_prompt -e OPENAPI_SERVICE_SPEC=https://bit.ly/github_compare -e FUNCTION_CALLING_PROMPT="Compare branches main (BASE) and test/benchmarks2.0 (HEAD), in Github repository deepset-ai/haystack (owner/repo)" vblagoje/openapi-rag-service  
+   docker run -e OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> -e OPENAPI_SERVICE_TOKEN=<YOUR_GITHUB_TOKEN> -e SYSTEM_PROMPT=https://bit.ly/pr_auto_system -e OPENAPI_SERVICE_SPEC=https://bit.ly/github_compare -e FUNCTION_CALLING_PROMPT="Compare branches main (BASE) and test/benchmarks2.0 (HEAD), in Github repository deepset-ai/haystack (owner/repo)" vblagoje/openapi-rag-service
    ```
 
    Modify the parameters `deepset-ai/haystack main test/benchmarks2.0` according to the specific repository main and pr branches, relevant to your use case.
@@ -180,11 +179,11 @@ also encourage experimentation to identify the most suitable option for your spe
 ### 2) How do I use custom prompts to guide LLM in generating PR text?
 
 Custom prompts are a powerful way to guide the LLM in generating PR text according to your specific needs. To use them
-directly on the GitHub website, mention `@auto-pr-bot` followed by your instructions in the PR description or
+directly on the GitHub website, mention `@pr-auto-bot` followed by your instructions in the PR description or
 comments. These instructions act as additional context or directives for the LLM, helping it understand how you want
 the PR text to be structured or focused. For instance, if you want the PR description to be concise, you might
-comment: `@auto-pr-bot, please be brief and limit each section to one sentence`. Remember to replace
-`@auto-pr-bot` with the customized bot name if you've set one. This way, you can effectively communicate your
+comment: `@pr-auto-bot, please be brief and limit each section to one sentence`. Remember to replace
+`@pr-auto-bot` with the customized bot name if you've set one. This way, you can effectively communicate your
 requirements to the LLM, resulting in more tailored and useful PR descriptions.
 
 ### 3) Can we customize the name of the bot?
@@ -197,12 +196,12 @@ and user expectations.
 ### 4) Can we skip PR text generation altogether when opening a PR?
 
 Absolutely, to skip PR text generation, simply include the word "skip" in a comment tagged to your bot. For example,
-you can comment `@auto-pr-bot skip` in the main PR description text area. This feature allows you to bypass the
+you can comment `@pr-auto-bot skip` in the main PR description text area. This feature allows you to bypass the
 automatic generation when you already have a specific description in mind or when it's not needed.
 
 ### 5) Can I experiment with other LLMs and LLM platforms?
 
-Yes, the Auto PR is designed to be flexible with various LLM providers such as fireworks.ai, together.xyz,
+Yes, the PR Auto is designed to be flexible with various LLM providers such as fireworks.ai, together.xyz,
 anyscale, octoai, etc. You can specify different LLMs and providers by setting the `openai_base_url` and
 `generation_model` inputs in your workflow. This allows you to experiment with different language models and
 platforms to find the one that best fits your needs and preferences for PR text generation.
