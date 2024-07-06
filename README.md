@@ -127,9 +127,9 @@ It's important to note that it utilizes fireworks.ai as an LLM provider, specifi
 
 - `head_branch` **Optional** The head (source) branch in the pull request. Defaults to the head branch of the current PR.
 
-- `generation_model` **Optional** The generation_model specifies the model to use for PR text generation. While it defaults to gpt-4-1106-preview from OpenAI, users have the flexibility to select from a range of models available from various LLM providers, including but not limited to fireworks.ai, together.xyz, anyscale, octoai, etc. This allows for more tailored and varied text generation capabilities to meet diverse needs and preferences.
+- `generation_model` **Optional** The generation_model specifies the model to use for PR text generation. While it defaults to gpt-4o from OpenAI, users have the flexibility to select from a range of models available from various LLM providers, including but not limited to fireworks.ai, together.xyz, anyscale, octoai, etc. This allows for more tailored and varied text generation capabilities to meet diverse needs and preferences.
 
-- `function_calling_model` **Optional** LLM to use for function calling (service parameter resolution, output formatting etc). Defaults to gpt-3.5-turbo-0613 from OpenAI.
+- `function_calling_model` **Optional** LLM to use for function calling (service parameter resolution, output formatting etc). Defaults to gpt-3.5-turbo from OpenAI.
 
 - `system_prompt` **Optional** System message/prompt to help the model generate the PR description.
 
