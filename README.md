@@ -24,93 +24,36 @@ Here's a minimal example of how to use the PR Auto in a pull request workflow:
 name: Pull Request Text Generator Workflow
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened]
 
 jobs:
-    generate-pr-text-on-opened-pr:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Run PR Auto on initial open PR
-          if: github.event_name == 'pull_request'
-          id: pr_auto_id
-          uses: vblagoje/pr-auto@v1
-          with:
-            openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-            user_prompt: ${{ github.event.pull_request.body }}
-
-        - name: Update PR description
-          uses: vblagoje/update-pr@v1
-          with:
-            pr-body: ${{ steps.pr_auto_id.outputs.pr-text }}
-```
-
-## Advanced Example Workflow
-
-Here's an advanced example of how to use the PR Auto in a pull request workflow:
-
-```yaml
-name: Pull Request Text Generator Workflow
-
-on:
-  pull_request:
-    types: [opened, edited, reopened]
-  issue_comment:
-    types: [created]
-
-jobs:
-  generate-pr-text-on-opened-pr:
+  generate-pr-text:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
-      - name: Run PR Auto on initial open PR
-        id: pr_auto_id
+      - name: Generate PR Description
         uses: vblagoje/pr-auto@v1
+        id: pr_auto
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          openai_base_url: https://api.fireworks.ai/inference/v1
-          generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
-          user_prompt: ${{ github.event.pull_request.body }}
 
       - name: Update PR description
         uses: vblagoje/update-pr@v1
         with:
-          pr-body: ${{ steps.pr_auto_id.outputs.pr-text }}
-
-
-  generate-pr-text-on-pr-comment:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@pr-auto-bot')
-    steps:   
-      - name: Fetch PR details for comment event
-        id: pr_details
-        uses: octokit/request-action@v2.x
-        with:
-          route: GET /repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run PR Auto on PR comment
-        uses: vblagoje/pr-auto@v1
-        id: pr_auto_for_comment
-        with:
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          openai_base_url: https://api.fireworks.ai/inference/v1
-          user_prompt: ${{ github.event.comment.body }}
-          target_branch: ${{ fromJson(steps.pr_details.outputs.data).base.ref }}
-          source_branch: ${{ fromJson(steps.pr_details.outputs.data).head.ref }}
-          generation_model: accounts/fireworks/models/mixtral-8x7b-instruct
-
-      - name: Update Pull Request Description
-        uses: vblagoje/update-pr@v1
-        with:
-          pr-body: ${{ steps.pr_auto_for_comment.outputs.pr_text }}
-          pr-number: ${{ github.event.issue.number }}
+          pr-body: ${{ steps.pr_auto.outputs.pr-text }}
 ```
-This workflow triggers the action on pull request open, edit, and reopen events. Additionally, it activates the action on issue comment events in pull requests when the comment contains `@pr-auto-bot`. 
-If you change the `bot_name` input in your workflow, make sure to update the `contains(github.event.comment.body, '@pr-auto-bot')` condition accordingly in your workflow.
+### Important Security Consideration
+Using PR Auto with the `pull_request_target` event is secure and allows PRs from forks. This approach:
 
-It's important to note that it utilizes fireworks.ai as an LLM provider, specifically the highly capable open-source LLM accounts/fireworks/models/mixtral-8x7b-instruct. This specific LLM has generated PR text descriptions comparable to those of gpt-4.
+- Doesn't check out any code from forks, eliminating the risk of running untrusted code.
+- Only generates PR descriptions based on pull request metadata.
+- Uses a trusted action (vblagoje/update-pr) to update the PR description.
+
+Using pr-auto in conjunction with fetching code from untrusted PR forks (e.g. via `actions/checkout`) poses a significant security risk, especially when used with the `pull_request_target` event. 
+
+For more detailed information on these security considerations, refer to:
+- [GitHub Actions documentation on pull_request_target](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target)
+- [GitHub Security Lab article: "Keeping your GitHub Actions and workflows secure: Preventing pwn requests"](https://securitylab.github.com/research/github-actions-preventing-pwn-requests/)
 
 ## Inputs
 
@@ -144,93 +87,6 @@ If you have ideas for enhancing PR Auto, or if you encounter a bug, we encourage
 The core of this GitHub Action is built on top of Docker image of the [vblagoje/openapi-rag-service](https://github.com/vblagoje/openapi-rag-service/) project. 
 Therefore, for contributions beyond minor edits to the `action.yml` or `README.md`, please direct your pull requests to 
 the [vblagoje/openapi-rag-service](https://github.com/vblagoje/openapi-rag-service/) GitHub repository.
-
-## Smoke Test for Docker Image
-
-To confirm the correct operation of the Docker image, perform a smoke test locally using the following steps:
-
-1. **Prepare Your OpenAI API Key**: Ensure your OpenAI API key is ready for use.
-
-2. **Execute the Image**:
-   Run the following command in your terminal, replacing `<YOUR_OPENAI_API_KEY>` with your actual API key and `<YOUR_GITHUB_TOKEN>` with your actual GitHub token:
-
-   ```bash
-   docker run -e OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> -e OPENAPI_SERVICE_TOKEN=<YOUR_GITHUB_TOKEN> -e SYSTEM_PROMPT=https://bit.ly/pr_auto_system -e OPENAPI_SERVICE_SPEC=https://bit.ly/github_compare -e FUNCTION_CALLING_PROMPT="Compare branches main (BASE) and test/benchmarks2.0 (HEAD), in Github repository deepset-ai/haystack (owner/repo)" vblagoje/openapi-rag-service
-   ```
-
-   Modify the parameters `deepset-ai/haystack main test/benchmarks2.0` according to the specific repository main and pr branches, relevant to your use case.
-
-3. **Check the Output**: After execution, verify the output to ensure the image functions as expected.
-
-This test will help you verify the basic functionality of the Docker image. Remember to adjust the command with the appropriate 
-project, repository, and branches you wish to compare etc.
-
-
-## Frequently Asked Questions (FAQ)
-
-### 1) Which LLM should I choose for PR text generation?
-
-When choosing LLMs for generating PR text, it's essential to consider the model's capability to handle long contexts,
-as it's required to process all the PR diffs. As of January 2024, we've tested models like mixtral-8x7b-instruct,
-yi-34b-200k-capybara, and gpt-4 variants. Both mixtral-8x7b-instruct and gpt-4 have demonstrated consistent
-excellence in producing PR descriptions. Therefore, we recommend either of these LLMs for consistent quality, but
-also encourage experimentation to identify the most suitable option for your specific requirements.
-
-### 2) How do I use custom prompts to guide LLM in generating PR text?
-
-Custom prompts are a powerful way to guide the LLM in generating PR text according to your specific needs. To use them
-directly on the GitHub website, mention `@pr-auto-bot` followed by your instructions in the PR description or
-comments. These instructions act as additional context or directives for the LLM, helping it understand how you want
-the PR text to be structured or focused. For instance, if you want the PR description to be concise, you might
-comment: `@pr-auto-bot, please be brief and limit each section to one sentence`. Remember to replace
-`@pr-auto-bot` with the customized bot name if you've set one. This way, you can effectively communicate your
-requirements to the LLM, resulting in more tailored and useful PR descriptions.
-
-### 3) Can we customize the name of the bot?
-
-Yes, you can customize the bot name. In your `action.yml` specify the `bot_name` input. The `bot_name` is typically
-set to a recognizable contributor on your project, so users can get name completion when they start typing `@` in
-comments. Customizing the bot name allows you to tailor the interaction to your project's or organization's branding
-and user expectations.
-
-### 4) Can we skip PR text generation altogether when opening a PR?
-
-Absolutely, to skip PR text generation, simply include the word "skip" in a comment tagged to your bot. For example,
-you can comment `@pr-auto-bot skip` in the main PR description text area. This feature allows you to bypass the
-automatic generation when you already have a specific description in mind or when it's not needed.
-
-### 5) Can I experiment with other LLMs and LLM platforms?
-
-Yes, the PR Auto is designed to be flexible with various LLM providers such as fireworks.ai, together.xyz,
-anyscale, octoai, etc. You can specify different LLMs and providers by setting the `openai_base_url` and
-`generation_model` inputs in your workflow. This allows you to experiment with different language models and
-platforms to find the one that best fits your needs and preferences for PR text generation.
-
-### 6) How should I test a new LLM and system prompt effectively?
-
-To effectively test a new LLM and system prompt, refer to the `Smoke Test for Docker Image` section of this document.
-Initiate a series of approximately a dozen PR generations, specifying your repository, base branch, and head branch 
-as parameters for the Docker run command. Feel free to modify the `SYSTEM_PROMPT` and `FUNCTION_CALLING_PROMPT`.
-
-Ensure the following environment variables are set correctly in your Docker run command:
-
-- `OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>`: This should be your OpenAI or other LLM provider's API key.
-- `GITHUB_TOKEN=<YOUR_GITHUB_TOKEN>`: Your GitHub token for accessing repository data and making changes.
-
-Additionally, if you're using a specific LLM provider or model, set the corresponding environment variables
-for `OPENAI_BASE_URL` and `GENERATION_MODEL` as needed. These variables will allow you to direct the script to use
-the correct API endpoints and models for PR text generation. Refer back to the `Smoke Test for Docker Image` section
-for the detailed procedure and adapt the instructions to fit your specific setup and testing needs.
-
-### 7) I'm concerned about the PR text generation costs, how can I minimize them?
-
-Managing costs is a critical aspect of using LLMs for PR text generation. As of January 2024, depending on the size of
-the PR diff, a typical cost per PR using gpt-4 model is approximately a few cents, whereas using the
-mixtral-8x7b-instruct on fireworks.ai is less than a cent per PR. To precisely monitor and manage your costs,
-especially if you are using platforms like OpenAI, you can set the `OPENAI_ORG_ID` environment variable to track costs
-accurately. This will help you keep a close eye on your usage and optimize accordingly to minimize expenses. Keep in
-mind that selecting the right model for your needs and monitoring the market for the best rates among various LLM
-platforms are effective strategies to control costs.
 
 ## License
 This project is licensed under [Apache 2.0 License](LICENSE).
