@@ -49,7 +49,7 @@ Using PR Auto with the `pull_request_target` event is secure and allows PRs from
 - Only generates PR descriptions based on pull request metadata.
 - Uses a trusted action (vblagoje/update-pr) to update the PR description.
 
-Using pr-auto in conjunction with fetching code from untrusted PR forks (e.g. via `actions/checkout`) poses a significant security risk, especially when used with the `pull_request_target` event. 
+Needless to say, don't use `pr-auto` in conjunction with fetching code from untrusted PR forks (e.g. via `actions/checkout`), especially when triggered by the `pull_request_target` event.  Instead, follow the example above to safely use pr-auto.
 
 For more detailed information on these security considerations, refer to:
 - [GitHub Actions documentation on pull_request_target](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target)
