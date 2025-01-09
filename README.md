@@ -70,11 +70,11 @@ For more detailed information on these security considerations, refer to:
 
 - `head_branch` **Optional** The head (source) branch in the pull request. Defaults to the head branch of the current PR.
 
-- `generation_model` **Optional** The generation_model specifies the model to use for PR text generation. While it defaults to gpt-4o from OpenAI, users have the flexibility to select from a range of models available from various LLM providers, including but not limited to fireworks.ai, together.xyz, anyscale, octoai, etc. This allows for more tailored and varied text generation capabilities to meet diverse needs and preferences.
+- `generation_model` **Optional** The generation_model specifies the model to use for PR text generation. While it defaults to gpt-4o-mini from OpenAI, users have the flexibility to select from a range of models available from various LLM providers, including but not limited to fireworks.ai, together.xyz, anyscale, octoai, etc. This allows for more tailored and varied text generation capabilities to meet diverse needs and preferences.
 
-- `function_calling_model` **Optional** LLM to use for function calling (service parameter resolution, output formatting etc). Defaults to gpt-3.5-turbo from OpenAI.
+- `function_calling_model` **Optional** LLM to use for function calling (service parameter resolution, output formatting etc). Defaults to gpt-4o-mini from OpenAI.
 
-- `system_prompt` **Optional** System message/prompt to help the model generate the PR description.
+- `system_prompt` **Optional** System message/prompt to help the model generate the PR description. Defaults to https://bit.ly/pr_auto
 
 - `user_prompt` **Optional** Additional user prompt to help the model generate the PR description.
 
