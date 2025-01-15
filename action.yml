@@ -58,7 +58,7 @@ runs:
     FUNCTION_CALLING_MODEL: ${{ inputs.function_calling_model }}
     SYSTEM_PROMPT: ${{ inputs.system_prompt }}
     USER_PROMPT: ${{ inputs.user_prompt }}
-    FUNCTION_CALLING_PROMPT: Compare branches ${{ inputs.base_branch }} (BASE) and ${{ inputs.head_branch }} (HEAD), in GitHub repository ${{ inputs.github_repository }} (owner/repo)
+    FUNCTION_CALLING_PROMPT: "Compare branches in a GitHub repository using the correct base...head syntax: (1) If the branches come from different repositories (forks), include the full repository name for each branch (e.g., deepset-ai:main...kaqmak:fix/component_type). (2) If the branches come from the same repository, use only the branch names (e.g., main...fix/error_msg_on_invalid_type). Your task: Compare branches ${{ inputs.base_branch }} (BASE) and ${{ inputs.head_branch }} (HEAD), in GitHub repository ${{ inputs.github_repository }} (owner/repo)."
     FUNCTION_CALLING_VALIDATION_SCHEMA: https://bit.ly/github_compare_branches_full_schema
     BOT_NAME: ${{ inputs.bot_name }}
     OPENAPI_SERVICE_SPEC: https://bit.ly/github_compare
